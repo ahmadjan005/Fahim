@@ -1,0 +1,32 @@
+name: Build Fahim APK
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unzip project
+        run: for f in *.zip; do unzip -o "$f"; done
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Copy game into app
+        run: |
+          mkdir -p android/app/src/main/assets/www
+          cp -r web/* android/app/src/main/assets/www/
+      - name: Build APK
+        working-directory: android
+        run: gradle assembleRelease --no-daemon
+      - name: Rename
+        run: cp android/app/build/outputs/apk/release/app-release.apk fahim.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Fahim-APK
+          path: fahim.apk
